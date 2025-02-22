@@ -1,6 +1,6 @@
 "use client"
 
-import { useState } from "react"
+import { useState , useEffect } from "react"
 import { useRouter } from "next/navigation"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
@@ -10,6 +10,7 @@ import { Label } from "@/components/ui/label"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Book, Laptop, SofaIcon as Couch, Shirt, Package, Upload, Tag, Banknote, MapPin, FileText } from "lucide-react"
 import { toast } from "sonner"
+import Cookies from "js-cookie"
 
 export default function PostListing() {
   const router = useRouter()
@@ -21,6 +22,9 @@ export default function PostListing() {
     category: "",
     images: [] as File[],
   })
+
+
+  
 
   const [isSubmitting, setIsSubmitting] = useState(false)
 

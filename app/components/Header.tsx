@@ -78,9 +78,9 @@ export default function Header() {
             <span className="text-xs">Post</span>
           </Button>
         </Link>
-        <Link href="/profile" className="flex-1 mx-[2px]">
+        <Link href="/dashboard" className="flex-1 mx-[2px]">
           <Button
-            variant={pathname === "/profile" ? "default" : "ghost"}
+            variant={pathname === "/dashboard" ? "default" : "ghost"}
             size="sm"
             className={`flex flex-col items-center justify-center h-auto py-1 w-full bg-white text-black hover:bg-black hover:text-white transition-colors ${pathname === "/profile" ? "bg-black text-white" : ""}`}
           >

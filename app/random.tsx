@@ -1,6 +1,6 @@
 "use client"
 
-import { useState } from "react"
+import { useState , useEffect } from "react"
 import { useRouter } from "next/navigation"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
@@ -10,6 +10,7 @@ import { Label } from "@/components/ui/label"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Book, Laptop, SofaIcon as Couch, Shirt, Package, Upload, Tag, Banknote, MapPin, FileText } from "lucide-react"
 import { toast } from "sonner"
+import Cookies from "js-cookie"
 
 export default function PostListing() {
   const router = useRouter()
@@ -21,6 +22,9 @@ export default function PostListing() {
     category: "",
     images: [] as File[],
   })
+
+
+  
 
   const [isSubmitting, setIsSubmitting] = useState(false)
 
@@ -44,65 +48,49 @@ export default function PostListing() {
     setIsSubmitting(true)
 
     try {
-      // First, upload the images
-      const imageFormData = new FormData()
+      const listingFormData = new FormData()
+      listingFormData.append("id", Date.now().toString())
+      listingFormData.append("title", formData.title)
+      listingFormData.append("description", formData.description)
+      listingFormData.append("price", formData.price.toString())
+      listingFormData.append("location", formData.location)
+      listingFormData.append("category", formData.category)
+      
+
       formData.images.forEach((image, index) => {
-        imageFormData.append(`image${index}`, image)
+        listingFormData.append( "images", image)
       })
 
-      const imageUploadResponse = await fetch("/upload", {
+      console.log(`Submitting to: ${process.env.NEXT_PUBLIC_API_URL}/listings`)
+      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/listings`, {
         method: "POST",
-        body: imageFormData,
+        body: listingFormData,
       })
-      const imageUploadResult = await imageUploadResponse.json()
 
-      if (!imageUploadResult.success) {
-        throw new Error("Failed to upload images")
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`)
       }
 
-      // Then, create the listing with the image URLs
-      const listingData = {
-        ...formData,
-        images: imageUploadResult.urls,
-        price: Number(formData.price),
-        id: Date.now(), // Generate a unique ID based on current timestamp
-      }
+      const result = await response.json()
 
-      if (
-        !listingData.title ||
-        !listingData.description ||
-        !listingData.price ||
-        !listingData.location ||
-        !listingData.category
-      ) {
-        toast.error("Please fill in all required fields.")
-        setIsSubmitting(false)
-        return
-      }
-
-      const listingResponse = await fetch("/listings", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify(listingData),
-      })
-      const listingResult = await listingResponse.json()
-
-      if (listingResult.success) {
-        toast.success("Listing created successfully!")
-      //  router.push("/") // Redirect to home page
-        router.refresh() // Refresh the page data
-        router.push(`/listing/${listingResult.listing._id}`)
+      if (result.success) {
+        toast.success("Listing created successfully!");
+  
+        setTimeout(() => {
+          router.push("/");
+          router.refresh();
+        }, 2000); // 2 seconds delay
       } else {
-        throw new Error("Failed to create listing")
+        throw new Error(result.message || "Failed to create listing")
       }
     } catch (error) {
       console.error("Error:", error)
       toast.error("Failed to create listing. Please try again.")
-      // Handle error (e.g., show error message to user)
+    } finally {
+      setIsSubmitting(false)
     }
   }
+
 
   const categoryIcons = {
     books: <Book className="h-4 w-4" />,
@@ -234,8 +222,15 @@ export default function PostListing() {
               <p className="text-sm text-muted-foreground mt-2">{formData.images.length} image(s) selected</p>
             )}
           </div>
-          <Button type="submit" className="w-full">
-            Post Listing
+          <Button type="submit" className="w-full" disabled={isSubmitting}>
+          {isSubmitting ? (
+    <div className="flex items-center space-x-2">
+      <div className="h-5 w-5 animate-spin border-2 border-white border-t-transparent rounded-full"></div>
+      <span>Posting...</span>
+    </div>
+  ) : (
+    "Post Listing"
+  )}
           </Button>
         </form>
       </CardContent>

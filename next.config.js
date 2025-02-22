@@ -1,7 +1,10 @@
 /** @type {import('next').NextConfig} */
 module.exports = {
   images: {
-    domains: ["hebbkx1anhila5yf.public.blob.vercel-storage.com", "res.cloudinary.com"],
+    domains: [ "res.cloudinary.com","hebbkx1anhila5yf.public.blob.vercel-storage.com"],
+  },
+  experimental: {
+    appDir: true,
   },
 }
 

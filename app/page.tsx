@@ -9,23 +9,27 @@ import { Eye, ExternalLink ,MapPin} from "lucide-react"
 import { useState, useEffect } from "react"
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog"
 import { toTitleCase } from "@/app/utils/stringUtils"
-
+import { useRouter } from "next/navigation"
+import { ListingCardSkeleton } from "@/components/listing-card-skeleton"
 
 export default function Home() {
   const [listings, setListings] = useState([])
   const [selectedListing, setSelectedListing] = useState(null)
+  const [isLoading, setIsLoading] = useState(true)
+  const router = useRouter()
 
 
   useEffect(() => {
     async function fetchListings() {
-      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/listings`)
+     
+     const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/listings`)
       if (!res.ok) {
         throw new Error("Failed to fetch listings")
       }
       const data = await res.json()
       setListings(data)
-    }
-    fetchListings()
+    } 
+ fetchListings() ,setIsLoading(false)
   }, [])
 
   return (
@@ -33,7 +37,11 @@ export default function Home() {
       <div className="space-y-4 p-4 pb-20 md:pb-4">
       <h1 className="text-2xl font-bold text-center text-foreground mt-2 mb-4">Featured Listings</h1>
       <div className="grid grid-cols-2 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
-        {listings.map((listing: any) => (
+        {isLoading
+            ? Array(8)
+                .fill(0)
+                .map((_, index) => <ListingCardSkeleton key={index} />)
+            : listings.map((listing) => (
           <Card key={listing._id} className="overflow-hidden group relative border-none shadow-sm">
             <Link href={`/listing/${listing._id}`} className="block h-full">
               <div className="relative aspect-video">
@@ -65,7 +73,7 @@ export default function Home() {
                     <MapPin className="h-3 w-3 mr-1" />
                     {listing.location}
                   </div>
-                  <span className="text-sm font-bold text-foreground">₦{listing.price}</span>
+                  <span className="text-sm font-bold text-foreground">₦{Number(listing.price).toLocaleString("en-NG")}</span>
                 </div>
               </CardContent>
             </Link>
@@ -94,7 +102,7 @@ export default function Home() {
                 <p className="text-sm text-muted-foreground">{toTitleCase(selectedListing.description)}</p>
                 <div className="flex items-center justify-between">
                   <Badge variant="secondary">{toTitleCase(selectedListing.category)}</Badge>
-                  <span className="font-bold text-lg">₦{selectedListing.price}</span>
+                  <span className="font-bold text-lg">₦{Number(selectedListing.price).toLocaleString("en-NG")}</span>
                 </div>
                 <p className="text-sm">📍 {toTitleCase(selectedListing.location)}</p>
               </div>

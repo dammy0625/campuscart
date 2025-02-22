@@ -4,6 +4,7 @@ import Header from "./components/Header"
 import Footer from "./components/Footer"
 import type React from "react"
 import { Toaster } from "sonner";
+import { AuthProvider } from "./contexts/AuthContext";
 
 const inter = Inter({
   subsets: ["latin"],
@@ -21,6 +22,7 @@ export default function RootLayout({
   children: React.ReactNode
 }) {
   return (
+    <AuthProvider>
     <html lang="en" className="dark">
       <body className={`${inter.className} min-h-screen bg-background font-sans antialiased`}>
         <div className="relative flex min-h-screen flex-col">
@@ -33,6 +35,7 @@ export default function RootLayout({
         </div>
       </body>
     </html>
+    </AuthProvider>
   )
 }
 
