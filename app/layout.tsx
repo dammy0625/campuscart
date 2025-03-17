@@ -22,9 +22,10 @@ export default function RootLayout({
   children: React.ReactNode
 }) {
   return (
-    <AuthProvider>
+    
     <html lang="en" className="dark">
       <body className={`${inter.className} min-h-screen bg-background font-sans antialiased`}>
+      <AuthProvider>
         <div className="relative flex min-h-screen flex-col">
           <Header />
           <Toaster position="top-right" richColors />
@@ -33,9 +34,10 @@ export default function RootLayout({
           </div>
           <Footer />
         </div>
+        </AuthProvider>
       </body>
     </html>
-    </AuthProvider>
+    
   )
 }
 
