@@ -10,7 +10,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { BarChart, Users, Package, DollarSign, ListPlus, LogOut } from "lucide-react";
 import { toTitleCase } from "@/app/utils/stringUtils";
 import Cookies from "js-cookie";
-
+import { useAuth } from "../contexts/AuthContext";
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL;
 
@@ -44,10 +44,10 @@ export default function Dashboard() {
     fetchUserData();
   }, [router]);
 
-  const handleLogout = () => {
-    Cookies.remove("jwt");
-    localStorage.removeItem("jwt");
-    router.push("/profile");
+  const { logout } = useAuth();
+
+  const handleLogout = async () => {
+    await logout();
   };
 
   return (

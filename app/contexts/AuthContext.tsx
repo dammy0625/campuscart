@@ -1,7 +1,8 @@
 "use client"
 
-import { createContext, useContext, useState, useEffect, ReactNode } from "react";
+import { createContext, useContext, useState, useEffect, ReactNode, useCallback } from "react";
 import { useRouter } from "next/navigation";
+import { toast } from "sonner"
 import Cookies from "js-cookie";
 
 type User = {
@@ -39,36 +40,30 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const router = useRouter();
   const API_URL = process.env.NEXT_PUBLIC_API_URL;
 
-  const checkAuth = async (): Promise<boolean> => {
-    const token = Cookies.get("jwt");
-    if (!token) {
-      setIsAuthenticated(false);
-      setUser(null);
-      setLoading(false);
-      return false;
-    }
-
+  const checkAuth = useCallback(async (): Promise<boolean> => {
+    setLoading(true); // Ensure loading starts
+    
     try {
-      const response = await fetch(`${API_URL}/auth/me`, {
+      const response = await fetch(`${API_URL}/api/auth/me`, {
         method: "GET",
-        headers: { Authorization: `Bearer ${token}` },
-        credentials: "include",
+        credentials: "include", // Ensures cookies are sent with the request
       });
-
+  
       if (!response.ok) throw new Error("Session expired");
-
+  
       const data = await response.json();
       setUser(data.user);
       setIsAuthenticated(true);
+      setLoading(false);
+      return true;
     } catch (err) {
       setUser(null);
       setIsAuthenticated(false);
-      Cookies.remove("jwt");
+      setLoading(false);
+      return false;
     }
-
-    setLoading(false);
-    return isAuthenticated;
-  };
+  }, []);
+  
 
   useEffect(() => {
     checkAuth();
@@ -106,12 +101,25 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     }
   };
 
-  const logout = () => {
-    Cookies.remove("jwt");
-    setIsAuthenticated(false);
-    setUser(null);
-    router.push("/profile");
+  const logout = async () => {
+    try {
+      const response = await fetch(`${API_URL}/api/auth/logout`, {
+        method: "POST",
+        credentials: "include",
+      });
+      if (!response.ok) {
+        throw new Error("Logout failed");
+      }
+      setIsAuthenticated(false);
+      setUser(null);
+      toast.success("Logged out successfully");
+      router.push("/profile"); // Redirect to login (or any desired page)
+    } catch (error) {
+      console.error("Logout error:", error);
+      toast.error("Logout failed. Please try again.");
+    }
   };
+  
 
   return (
     <AuthContext.Provider value={{ isAuthenticated, loading, user, error, login, logout, checkAuth }}>

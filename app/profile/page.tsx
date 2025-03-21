@@ -16,9 +16,15 @@ export default function ProfilePage() {
   const [formData, setFormData] = useState({ name: "", email: "", password: "" });
   const router = useRouter();
   const { login, user, loading, error, isAuthenticated } = useAuth();
+  
+  console.log("isAuthenticated:", isAuthenticated)
+  console.log("loading:", loading)
 
   useEffect(() => {
+
     if (isAuthenticated) {
+      console.log("isAuthenticated:", isAuthenticated)
+      console.log("loading:", loading)
       router.replace("/dashboard");
     }
   }, [isAuthenticated, router]);
