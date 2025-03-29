@@ -14,17 +14,12 @@ const API_URL = process.env.NEXT_PUBLIC_API_URL;
 export default function ProfilePage() {
   const [isLogin, setIsLogin] = useState(true);
   const [formData, setFormData] = useState({ name: "", email: "", password: "" });
+  const [signupError, setSignupError] = useState("");
   const router = useRouter();
   const { login, user, loading, error, isAuthenticated } = useAuth();
-  
-  console.log("isAuthenticated:", isAuthenticated)
-  console.log("loading:", loading)
 
   useEffect(() => {
-
     if (isAuthenticated) {
-      console.log("isAuthenticated:", isAuthenticated)
-      console.log("loading:", loading)
       router.replace("/dashboard");
     }
   }, [isAuthenticated, router]);
@@ -40,25 +35,29 @@ export default function ProfilePage() {
 
   const handleSubmit = async (event: React.FormEvent) => {
     event.preventDefault();
+    setSignupError("");
 
     if (isLogin) {
       const success = await login({ email: formData.email, password: formData.password });
       if (success) router.replace("/dashboard");
     } else {
       try {
-        const response = await fetch(`${API_URL}/auth/signup`, {
+        const response = await fetch(`${API_URL}/api/auth/signup`, {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify(formData),
           credentials: "include",
         });
 
-        if (!response.ok) throw new Error("Signup failed");
+        if (!response.ok) {
+          const data = await response.json();
+          throw new Error(data.message || "Signup failed");
+        }
 
         await login({ email: formData.email, password: formData.password });
         router.replace("/dashboard");
       } catch (err) {
-        console.error("Signup error:", err);
+        setSignupError(err.message);
       }
     }
   };
@@ -77,32 +76,67 @@ export default function ProfilePage() {
         <CardHeader>
           <CardTitle>{isLogin ? "Login" : "Sign Up"}</CardTitle>
           <CardDescription>
-            {isLogin ? "Enter your credentials to access your account" : "Create a new account to get started"}
+            {isLogin
+              ? "Enter your credentials to access your account"
+              : "Create a new account to get started"}
           </CardDescription>
         </CardHeader>
         <CardContent>
           {error && <p className="text-red-500 text-sm text-center mb-4">{error}</p>}
+          {signupError && <p className="text-red-500 text-sm text-center mb-4">{signupError}</p>}
           <form onSubmit={handleSubmit} className="space-y-4">
             {!isLogin && (
               <div className="space-y-2">
                 <Label htmlFor="name">Name</Label>
-                <Input id="name" name="name" type="text" value={formData.name} onChange={handleChange} required />
+                <Input
+                  id="name"
+                  name="name"
+                  type="text"
+                  value={formData.name}
+                  onChange={handleChange}
+                  required
+                />
               </div>
             )}
             <div className="space-y-2">
               <Label htmlFor="email">Email</Label>
-              <Input id="email" name="email" type="email" value={formData.email} onChange={handleChange} required />
+              <Input
+                id="email"
+                name="email"
+                type="email"
+                value={formData.email}
+                onChange={handleChange}
+                required
+              />
             </div>
             <div className="space-y-2">
               <Label htmlFor="password">Password</Label>
-              <Input id="password" name="password" type="password" value={formData.password} onChange={handleChange} required />
+              <Input
+                id="password"
+                name="password"
+                type="password"
+                value={formData.password}
+                onChange={handleChange}
+                required
+              />
             </div>
-            <Button type="submit" className="w-full" disabled={loading}>{loading ? "Processing..." : isLogin ? "Login" : "Sign Up"}</Button>
+            <Button type="submit" className="w-full" disabled={loading}>
+              {loading ? "Processing..." : isLogin ? "Login" : "Sign Up"}
+            </Button>
           </form>
+
           <Button variant="outline" className="w-full mt-4" onClick={handleGoogleAuth} disabled={loading}>
             <Icons.google className="mr-2 h-4 w-4" />
             {isLogin ? "Login with Google" : "Sign up with Google"}
           </Button>
+
+          {/* Toggle Button */}
+          <p className="text-sm text-center mt-4">
+            {isLogin ? "Don't have an account?" : "Already have an account?"}{" "}
+            <button onClick={() => setIsLogin(!isLogin)} className="text-blue-500 hover:underline">
+              {isLogin ? "Sign up" : "Login"}
+            </button>
+          </p>
         </CardContent>
       </Card>
     </div>

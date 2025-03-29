@@ -36,7 +36,7 @@ export default function Home() {
         throw new Error("Failed to fetch listings");
       }
       const data = await res.json();
-      //console.log(data)
+      console.log(data)
       // Expecting data.listings to be returned from your backend
       const newListings = data.listings || data;
       if (newListings.length < limit) {
@@ -91,9 +91,7 @@ export default function Home() {
                   <Link href={`/listing/${listing._id}`} className="block h-full">
                     <div className="relative aspect-video">
                       <Image
-                        src={
-                         // listing.images.length ? listing.images[listing.images.length - 1] : "/placeholder.svg"}
-                         listing.images[0]|| "/placeholder.svg"}
+                        src={listing.images[0] || "/placeholder.svg"}
                         alt={listing.title}
                         layout="fill"
                         objectFit="cover"

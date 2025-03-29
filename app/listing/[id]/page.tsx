@@ -1,15 +1,16 @@
-"use client"
+"use client";
 
-import * as React from "react"
-import Image from "next/image"
-import { Card, CardContent } from "@/components/ui/card"
-import { Badge } from "@/components/ui/badge"
-import { Button } from "@/components/ui/button"
-import { Carousel, CarouselContent, CarouselItem, CarouselNext, CarouselPrevious } from "@/components/ui/carousel"
-import { MapPin, Calendar, DollarSign, Tag, Eye } from "lucide-react"
-import { toTitleCase } from "@/app/utils/stringUtils"
-import { cn } from "@/lib/utils"
+import * as React from "react";
+import Image from "next/image";
+import { Card, CardContent } from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
+import { Carousel, CarouselContent, CarouselItem, CarouselNext, CarouselPrevious } from "@/components/ui/carousel";
+import { MapPin, Calendar, DollarSign, Tag, Eye } from "lucide-react";
+import { toTitleCase } from "@/app/utils/stringUtils";
+import { cn } from "@/lib/utils";
 
+// Async function to fetch listing
 async function getListing(id: string) {
   try {
     const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/listings/${id}`, {
@@ -17,39 +18,37 @@ async function getListing(id: string) {
       headers: {
         "Content-Type": "application/json",
       },
-    })
+    });
 
     if (!res.ok) {
       if (res.status === 404) {
-        return null
+        return null;
       }
-      throw new Error(`Failed to fetch listing: ${res.status}`)
+      throw new Error(`Failed to fetch listing: ${res.status}`);
     }
 
-    return res.json()
+    return res.json();
   } catch (error) {
-    console.error("Error fetching listing:", error)
-    throw error
+    console.error("Error fetching listing:", error);
+    throw error;
   }
 }
 
 function ImageCarousel({ images, title }: { images: string[]; title: string }) {
-  const [currentIndex, setCurrentIndex] = React.useState(0)
+  const [currentIndex, setCurrentIndex] = React.useState(0);
 
   if (!images || images.length === 0) {
     return (
       <div className="flex justify-center items-center h-64 bg-gray-100 rounded-lg">
         <Image src="/placeholder.svg" alt="Placeholder" width={200} height={200} />
       </div>
-    )
+    );
   }
 
   return (
     <div className="space-y-4">
       <Carousel
-        opts={{
-          loop: true,
-        }}
+        opts={{ loop: true }}
         className="w-full"
         onSelect={(selectedIndex) => setCurrentIndex(selectedIndex)}
       >
@@ -78,30 +77,37 @@ function ImageCarousel({ images, title }: { images: string[]; title: string }) {
             key={index}
             className={cn(
               "w-16 h-16 overflow-hidden cursor-pointer transition-all",
-              index === currentIndex && "ring-2 ring-primary",
+              index === currentIndex && "ring-2 ring-primary"
             )}
             onClick={() => setCurrentIndex(index)}
           >
             <CardContent className="p-0">
               <img
-
-src={`${image}?w=300&q=50`} // Reduce size & quality for faster loading
-alt={`${title} - Image`}
-width={300}
-height={300}
-
-className="object-cover rounded-lg"
+                src={`${image}?w=300&q=50`}
+                alt={`${title} - Image`}
+                width={300}
+                height={300}
+                className="object-cover rounded-lg"
               />
             </CardContent>
           </Card>
         ))}
       </div>
     </div>
-  )
+  );
 }
 
-
 function ListingDetails({ listing }: { listing: any }) {
+  // Prepare WhatsApp link if seller's whatsapp is available.
+  const sellerWhatsapp = listing?.user?.whatsapp;
+  // Generate a default message (make sure `window` is available; typically this is in a client component)
+const message = encodeURIComponent(
+  `Hi, I'm interested in your listing: ${toTitleCase(listing.title)}. Here is the link: ${window.location.origin}/listing/${listing._id}`
+);
+  const whatsappLink = sellerWhatsapp
+   ? `https://wa.me/${listing.user.whatsapp}?text=${message}`
+    : null;
+
   return (
     <Card>
       <CardContent className="space-y-6">
@@ -122,8 +128,7 @@ function ListingDetails({ listing }: { listing: any }) {
             </Badge>
           </div>
           <div className="text-3xl font-bold mb-4 flex items-center">
-          ₦
-            {Number(listing.price).toLocaleString("en-NG")}
+            ₦{Number(listing.price).toLocaleString("en-NG")}
           </div>
         </div>
 
@@ -133,9 +138,17 @@ function ListingDetails({ listing }: { listing: any }) {
         </div>
 
         <div className="flex flex-col space-y-4">
-          <Button className="w-full" size="lg">
-            Contact Seller
-          </Button>
+          {whatsappLink ? (
+            <a href={whatsappLink} target="_blank" rel="noopener noreferrer">
+              <Button className="w-full" size="lg">
+                Contact Seller on WhatsApp
+              </Button>
+            </a>
+          ) : (
+            <Button className="w-full" size="lg" disabled>
+              Seller did not provide WhatsApp contact
+            </Button>
+          )}
           <Button variant="outline" className="w-full" size="lg">
             <Eye className="mr-2 h-4 w-4" />
             {listing.views || 0} Views
@@ -143,43 +156,43 @@ function ListingDetails({ listing }: { listing: any }) {
         </div>
       </CardContent>
     </Card>
-  )
+  );
 }
 
 export default function ListingPage({ params }: { params: Promise<{ id: string }> }) {
-  const [listing, setListing] = React.useState<any>(null)
-  const [isLoading, setIsLoading] = React.useState(true)
-  const [resolvedParams, setResolvedParams] = React.useState<{ id: string } | null>(null)
+  const [listing, setListing] = React.useState<any>(null);
+  const [isLoading, setIsLoading] = React.useState(true);
+  const [resolvedParams, setResolvedParams] = React.useState<{ id: string } | null>(null);
 
   React.useEffect(() => {
     params.then((resolved) => {
-      setResolvedParams(resolved)
-    })
-  }, [params])
+      setResolvedParams(resolved);
+    });
+  }, [params]);
 
   React.useEffect(() => {
     if (resolvedParams) {
       getListing(resolvedParams.id)
         .then((data) => {
-          setListing(data)
-          setIsLoading(false)
+          setListing(data);
+          setIsLoading(false);
         })
         .catch(() => {
-          setIsLoading(false)
-        })
+          setIsLoading(false);
+        });
     }
-  }, [resolvedParams])
+  }, [resolvedParams]);
 
   if (!resolvedParams) {
-    return <div className="container mx-auto px-4 py-8">Loading...</div>
+    return <div className="container mx-auto px-4 py-8">Loading...</div>;
   }
 
   if (isLoading) {
-    return <div className="container mx-auto px-4 py-8">Loading...</div>
+    return <div className="container mx-auto px-4 py-8">Loading...</div>;
   }
 
   if (!listing) {
-    return <div className="container mx-auto px-4 py-8">Listing not found</div>
+    return <div className="container mx-auto px-4 py-8">Listing not found</div>;
   }
 
   return (
@@ -189,7 +202,5 @@ export default function ListingPage({ params }: { params: Promise<{ id: string }
         <ListingDetails listing={listing} />
       </div>
     </div>
-  )
+  );
 }
-
-

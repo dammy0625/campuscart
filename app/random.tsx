@@ -1,241 +1,125 @@
 "use client"
 
-import { useState , useEffect } from "react"
-import { useRouter } from "next/navigation"
+import { Card, CardContent } from "@/components/ui/card"
+import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
-import { Input } from "@/components/ui/input"
-import { Textarea } from "@/components/ui/textarea"
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
-import { Label } from "@/components/ui/label"
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
-import { Book, Laptop, SofaIcon as Couch, Shirt, Package, Upload, Tag, Banknote, MapPin, FileText } from "lucide-react"
-import { toast } from "sonner"
-import Cookies from "js-cookie"
+import Image from "next/image"
+import Link from "next/link"
+import { Eye, ExternalLink ,MapPin} from "lucide-react"
+import { useState, useEffect } from "react"
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog"
+import { toTitleCase } from "@/app/utils/stringUtils"
+import { useRouter } from "next/navigation"
+import { ListingCardSkeleton } from "@/components/listing-card-skeleton"
 
-export default function PostListing() {
+export default function Home() {
+  const [listings, setListings] = useState([])
+  const [selectedListing, setSelectedListing] = useState(null)
+  const [isLoading, setIsLoading] = useState(true)
   const router = useRouter()
-  const [formData, setFormData] = useState({
-    title: "",
-    description: "",
-    price: 0,
-    location: "",
-    category: "",
-    images: [] as File[],
-  })
 
 
-  
-
-  const [isSubmitting, setIsSubmitting] = useState(false)
-
-  const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
-    const { name, value } = e.target
-    setFormData((prevState) => ({ ...prevState, [name]: value }))
-  }
-
-  const handleSelectChange = (name: string, value: string) => {
-    setFormData((prevState) => ({ ...prevState, [name]: value }))
-  }
-
-  const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
-    if (e.target.files) {
-      setFormData((prevState) => ({ ...prevState, images: [...prevState.images, ...e.target.files!] }))
-    }
-  }
-
-  const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
-    e.preventDefault()
-    setIsSubmitting(true)
-
-    try {
-      const listingFormData = new FormData()
-      listingFormData.append("id", Date.now().toString())
-      listingFormData.append("title", formData.title)
-      listingFormData.append("description", formData.description)
-      listingFormData.append("price", formData.price.toString())
-      listingFormData.append("location", formData.location)
-      listingFormData.append("category", formData.category)
-      
-
-      formData.images.forEach((image, index) => {
-        listingFormData.append( "images", image)
-      })
-
-      console.log(`Submitting to: ${process.env.NEXT_PUBLIC_API_URL}/listings`)
-      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/listings`, {
-        method: "POST",
-        body: listingFormData,
-      })
-
-      if (!response.ok) {
-        throw new Error(`HTTP error! status: ${response.status}`)
+  useEffect(() => {
+    async function fetchListings() {
+     
+     const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/listings`)
+      if (!res.ok) {
+        throw new Error("Failed to fetch listings")
       }
-
-      const result = await response.json()
-
-      if (result.success) {
-        toast.success("Listing created successfully!");
-  
-        setTimeout(() => {
-          router.push("/");
-          router.refresh();
-        }, 2000); // 2 seconds delay
-      } else {
-        throw new Error(result.message || "Failed to create listing")
-      }
-    } catch (error) {
-      console.error("Error:", error)
-      toast.error("Failed to create listing. Please try again.")
-    } finally {
-      setIsSubmitting(false)
-    }
-  }
-
-
-  const categoryIcons = {
-    books: <Book className="h-4 w-4" />,
-    electronics: <Laptop className="h-4 w-4" />,
-    furniture: <Couch className="h-4 w-4" />,
-    clothing: <Shirt className="h-4 w-4" />,
-    other: <Package className="h-4 w-4" />,
-  }
+      const data = await res.json()
+      setListings(data)
+      setIsLoading(false)
+    } 
+ fetchListings() ,setIsLoading(false)
+  }, [])
 
   return (
-    <Card className="mx-auto max-w-2xl">
-      <CardHeader>
-        <CardTitle className="text-2xl font-bold text-foreground">Post a New Listing</CardTitle>
-      </CardHeader>
-      <CardContent>
-        <form onSubmit={handleSubmit} className="space-y-6">
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <div className="space-y-2">
-              <Label htmlFor="title" className="flex items-center">
-                <Tag className="h-4 w-4 mr-2" />
-                Product Name
-              </Label>
-              <Input
-                id="title"
-                name="title"
-                value={formData.title}
-                onChange={handleChange}
-                required
-                className="text-foreground"
-              />
-            </div>
-            <div className="space-y-2">
-              <Label htmlFor="price" className="flex items-center">
-                <Banknote className="h-4 w-4 mr-2" />
-                Price (₦)
-              </Label>
-              <div className="relative">
-                <span className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground">₦</span>
-                <Input
-                  id="price"
-                  name="price"
-                  type="number"
-                  value={formData.price}
-                  onChange={handleChange}
-                  required
-                  className="text-foreground pl-7"
+    <>
+      <div className="space-y-4 p-4 pb-20 md:pb-4">
+      <h1 className="text-2xl font-bold text-center text-foreground mt-2 mb-4">Featured Listings</h1>
+      <div className="grid grid-cols-2 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
+        {isLoading
+            ? Array(8)
+                .fill(0)
+                .map((_, index) => <ListingCardSkeleton key={index} />)
+            : listings.map((listing) => (
+          <Card key={listing._id} className="overflow-hidden group relative border-none shadow-sm">
+            <Link href={`/listing/${listing._id}`} className="block h-full">
+              <div className="relative aspect-video">
+                <Image
+                  src={listing.images[0] || "/placeholder.svg"}
+                  alt={listing.title}
+                  layout="fill"
+                  objectFit="cover"
+                  className="transition-transform group-hover:scale-105"
+                />
+                <div className="absolute inset-0 bg-black bg-opacity-20 transition-opacity group-hover:bg-opacity-30" />
+                <Button
+            variant="ghost"
+            size="icon"
+            className="absolute top-2 right-2 z-10 bg-black/70 text-white hover:bg-black"
+            onClick={(e) => {
+              e.preventDefault()
+              e.stopPropagation()
+              setSelectedListing(listing)
+            }}
+          >
+            <Eye className="h-4 w-4" />
+          </Button>
+              </div>
+              <CardContent className="p-3">
+                <h2 className="text-sm font-semibold line-clamp-2 text-foreground mb-1">{toTitleCase(listing.title)}</h2>
+                <div className="flex justify-between items-center">
+                  <div className="flex items-center text-xs text-muted-foreground">
+                    <MapPin className="h-3 w-3 mr-1" />
+                    {listing.location}
+                  </div>
+                  <span className="text-sm font-bold text-foreground">₦{Number(listing.price).toLocaleString("en-NG")}</span>
+                </div>
+              </CardContent>
+            </Link>
+          </Card>
+        ))}
+      </div>
+    </div>
+
+      {selectedListing && (
+        <Dialog open={!!selectedListing} onOpenChange={() => setSelectedListing(null)}>
+          <DialogContent className="sm:max-w-[425px] w-[70vw] max-h-[80vh] h-auto overflow-hidden flex flex-col">
+            <DialogHeader>
+              <DialogTitle className="text-xl">{toTitleCase(selectedListing.title)}</DialogTitle>
+            </DialogHeader>
+            <div className="flex-grow flex flex-col gap-4 py-4">
+              <div className="relative aspect-square w-full flex-shrink-0" style={{ maxHeight: "40vh" }}>
+                <Image
+                  src={selectedListing.images[0] || "/placeholder.svg"}
+                  alt={selectedListing.title}
+                  layout="fill"
+                  objectFit="cover"
+                  className="rounded-lg"
                 />
               </div>
-            </div>
-          </div>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <div className="space-y-2">
-              <Label htmlFor="category" className="flex items-center">
-                <Package className="h-4 w-4 mr-2" />
-                Category
-              </Label>
-              <Select onValueChange={(value) => handleSelectChange("category", value)}>
-                <SelectTrigger>
-                  <SelectValue placeholder="Select a category" />
-                </SelectTrigger>
-                <SelectContent>
-                  {Object.entries(categoryIcons).map(([value, icon]) => (
-                    <SelectItem key={value} value={value}>
-                      <div className="flex items-center">
-                        {icon}
-                        <span className="ml-2 capitalize">{value}</span>
-                      </div>
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
-            <div className="space-y-2">
-              <Label htmlFor="location" className="flex items-center">
-                <MapPin className="h-4 w-4 mr-2" />
-                Location
-              </Label>
-              <Select onValueChange={(value) => handleSelectChange("location", value)}>
-                <SelectTrigger>
-                  <SelectValue placeholder="Select a location" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="uniosun">UNIOSUN</SelectItem>
-                  <SelectItem value="leads-university">Leads University</SelectItem>
-                  <SelectItem value="oou">OOU</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
-          </div>
-          <div className="space-y-2">
-            <Label htmlFor="description" className="flex items-center">
-              <FileText className="h-4 w-4 mr-2" />
-              Description
-            </Label>
-            <Textarea
-              id="description"
-              name="description"
-              value={formData.description}
-              onChange={handleChange}
-              required
-              className="text-foreground min-h-[150px]"
-            />
-          </div>
-          <div className="space-y-2">
-            <Label htmlFor="images" className="flex items-center">
-              <Upload className="h-4 w-4 mr-2" />
-              Images
-            </Label>
-            <div className="flex items-center space-x-2">
-              <Input
-                id="images"
-                type="file"
-                accept="image/*"
-                multiple
-                onChange={handleImageUpload}
-                className="hidden"
-              />
-              <Label
-                htmlFor="images"
-                className="cursor-pointer flex items-center justify-center w-full h-32 border-2 border-dashed rounded-md hover:border-primary"
-              >
-                <div className="flex flex-col items-center">
-                  <Upload className="h-8 w-8 text-muted-foreground mb-2" />
-                  <span className="text-sm text-muted-foreground">Upload Images</span>
+              <div className="space-y-3 flex-shrink overflow-y-auto pr-2">
+                <p className="text-sm text-muted-foreground">{toTitleCase(selectedListing.description)}</p>
+                <div className="flex items-center justify-between">
+                  <Badge variant="secondary">{toTitleCase(selectedListing.category)}</Badge>
+                  <span className="font-bold text-lg">₦{Number(selectedListing.price).toLocaleString("en-NG")}</span>
                 </div>
-              </Label>
+                <p className="text-sm">📍 {toTitleCase(selectedListing.location)}</p>
+              </div>
             </div>
-            {formData.images.length > 0 && (
-              <p className="text-sm text-muted-foreground mt-2">{formData.images.length} image(s) selected</p>
-            )}
-          </div>
-          <Button type="submit" className="w-full" disabled={isSubmitting}>
-          {isSubmitting ? (
-    <div className="flex items-center space-x-2">
-      <div className="h-5 w-5 animate-spin border-2 border-white border-t-transparent rounded-full"></div>
-      <span>Posting...</span>
-    </div>
-  ) : (
-    "Post Listing"
-  )}
-          </Button>
-        </form>
-      </CardContent>
-    </Card>
+            <DialogFooter>
+              <Link href={`/listing/${selectedListing._id}`} className="w-full">
+                <Button className="w-full" size="lg">
+                  View Full Details
+                  <ExternalLink className="ml-2 h-4 w-4" />
+                </Button>
+              </Link>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
+      )}
+    </>
   )
 }
-
 
