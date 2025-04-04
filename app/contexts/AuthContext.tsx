@@ -56,20 +56,21 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       setIsAuthenticated(true);
       setLoading(false);
       return true;
-    } catch (err) {
+    } catch (error: unknown
+     ) {
       setUser(null);
       setIsAuthenticated(false);
       setLoading(false);
       return false;
     }
-  }, []);
+  }, [API_URL]);
   
 
   useEffect(() => {
     checkAuth();
-  }, []);
+   }, [checkAuth]);
 
-  const login = async ({ email, password }: { email: string; password: string }): Promise<boolean> => {
+   const login = async ({ email, password }: { email: string; password: string }): Promise<boolean> => {
     try {
       setError(null);
       setLoading(true);
@@ -93,8 +94,12 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       setUser(data.user);
       setIsAuthenticated(true);
       return true;
-    } catch (err: any) {
-      setError(err.message);
+    } catch (error: unknown) {
+      if(error instanceof Error){
+        setError(error.message);
+      }else{
+        setError("An unknown error occured")
+      }
       return false;
     } finally {
       setLoading(false);

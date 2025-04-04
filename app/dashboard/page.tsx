@@ -28,7 +28,7 @@ import {
   LogOut,
 } from "lucide-react";
 import { toTitleCase } from "@/app/utils/stringUtils";
-import Cookies from "js-cookie";
+//import Cookies from "js-cookie";
 import { useAuth } from "../contexts/AuthContext";
 import { toast } from "sonner";
 import { Input } from "@/components/ui/input";
@@ -46,6 +46,25 @@ import {
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL;
 
+// Define types to replace `any`
+interface UserType {
+  _id: string;
+  name: string;
+  email: string;
+  avatar?: string;
+  whatsapp?: string;
+}
+
+interface ListingType {
+  _id: string;
+  title: string;
+  description: string;
+  price: number;
+  location: string;
+  category: string;
+  images: string[];
+}
+
 export default function Dashboard() {
   const [user, setUser] = useState<any>(null);
   const [activeListings, setActiveListings] = useState([]);
@@ -53,6 +72,7 @@ export default function Dashboard() {
   const [whatsappNumber, setWhatsappNumber] = useState("");
   const [updatingWhatsapp, setUpdatingWhatsapp] = useState(false);
   const router = useRouter();
+
 
   useEffect(() => {
     const fetchUserData = async () => {
@@ -143,6 +163,7 @@ export default function Dashboard() {
       setUpdatingWhatsapp(false);
     }
   };
+    
 
   if (isLoading) {
     return (

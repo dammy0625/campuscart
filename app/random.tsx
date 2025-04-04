@@ -1,125 +1,306 @@
-"use client"
+"use client";
 
-import { Card, CardContent } from "@/components/ui/card"
-import { Badge } from "@/components/ui/badge"
-import { Button } from "@/components/ui/button"
-import Image from "next/image"
-import Link from "next/link"
-import { Eye, ExternalLink ,MapPin} from "lucide-react"
-import { useState, useEffect } from "react"
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog"
-import { toTitleCase } from "@/app/utils/stringUtils"
-import { useRouter } from "next/navigation"
-import { ListingCardSkeleton } from "@/components/listing-card-skeleton"
+import { useState, useEffect } from "react";
+import { useRouter } from "next/navigation";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
+import {
+  Avatar,
+  AvatarFallback,
+  AvatarImage,
+} from "@/components/ui/avatar";
+import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
+import {
+  Tabs,
+  TabsContent,
+  TabsList,
+  TabsTrigger,
+} from "@/components/ui/tabs";
+import {
+  BarChart,
+  ListPlus,
+  LogOut,
+} from "lucide-react";
+import { toTitleCase } from "@/app/utils/stringUtils";
+//import Cookies from "js-cookie";
+import { useAuth } from "../contexts/AuthContext";
+import { toast } from "sonner";
+import { Input } from "@/components/ui/input";
 
-export default function Home() {
-  const [listings, setListings] = useState([])
-  const [selectedListing, setSelectedListing] = useState(null)
-  const [isLoading, setIsLoading] = useState(true)
-  const router = useRouter()
+// Import Dialog components from your UI library
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogDescription,
+  DialogFooter,
+  DialogTrigger,
+} from "@/components/ui/dialog";
+
+const API_URL = process.env.NEXT_PUBLIC_API_URL;
+
+// Define types to replace `any`
+interface UserType {
+  _id: string;
+  name: string;
+  email: string;
+  avatar?: string;
+  whatsapp?: string;
+}
+
+interface ListingType {
+  _id: string;
+  title: string;
+  description: string;
+  price: number;
+  location: string;
+  category: string;
+  images: string[];
+}
+
+export default function Dashboard() {
+  const [user, setUser] = useState<any>(null);
+  const [activeListings, setActiveListings] = useState([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const [whatsappNumber, setWhatsappNumber] = useState("");
+  const [updatingWhatsapp, setUpdatingWhatsapp] = useState(false);
+  const router = useRouter();
 
 
   useEffect(() => {
-    async function fetchListings() {
-     
-     const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/listings`)
-      if (!res.ok) {
-        throw new Error("Failed to fetch listings")
+    const fetchUserData = async () => {
+      try {
+        const response = await fetch(`${API_URL}/api/auth/me`, {
+          method: "GET",
+          credentials: "include",
+          headers: { "Content-Type": "application/json" },
+        });
+
+        if (!response.ok) throw new Error("Failed to fetch user data");
+
+        const data = await response.json();
+        setUser(data);
+        if (data.whatsapp) {
+          setWhatsappNumber(data.whatsapp);
+        }
+      } catch (error) {
+        console.error("Error fetching user data:", error);
+        router.push("/profile");
+      } finally {
+        setIsLoading(false);
       }
-      const data = await res.json()
-      setListings(data)
-      setIsLoading(false)
-    } 
- fetchListings() ,setIsLoading(false)
-  }, [])
+    };
+
+    fetchUserData();
+  }, [router]);
+
+  // Fetch active listings for the logged-in user
+  useEffect(() => {
+    const fetchUserListings = async () => {
+      try {
+        const response = await fetch(`${API_URL}/user-listings`, {
+          method: "GET",
+          credentials: "include",
+          headers: { "Content-Type": "application/json" },
+        });
+        if (!response.ok) throw new Error("Failed to fetch user listings");
+        const data = await response.json();
+        setActiveListings(data.listings || data);
+      } catch (error) {
+        console.error("Error fetching user listings:", error);
+        toast.error("Failed to load your listings.");
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    fetchUserListings();
+  }, []);
+
+  const { logout } = useAuth();
+
+  const handleLogout = async () => {
+    await logout();
+  };
+
+  const handleUpdateWhatsapp = async () => {
+    setUpdatingWhatsapp(true);
+    try {
+      // Ensure the number starts with "+234"
+      let formattedNumber = whatsappNumber.trim();
+      if (!formattedNumber.startsWith("+234")) {
+        if (formattedNumber.startsWith("0")) {
+          formattedNumber = formattedNumber.substring(1);
+        }
+        formattedNumber = "+234" + formattedNumber;
+      }
+
+      const response = await fetch(`${API_URL}/api/auth/update-whatsapp`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        credentials: "include",
+        body: JSON.stringify({ whatsapp: formattedNumber }),
+      });
+      if (!response.ok) {
+        throw new Error("Failed to update WhatsApp number");
+      }
+      const data = await response.json();
+      toast.success("WhatsApp number updated successfully!");
+      setUser((prev: any) => ({ ...prev, whatsapp: formattedNumber }));
+    } catch (error: any) {
+      console.error("WhatsApp update error:", error);
+      toast.error(
+        error.message || "Failed to update WhatsApp number. Please try again."
+      );
+    } finally {
+      setUpdatingWhatsapp(false);
+    }
+  };
+
+  if (isLoading) {
+    return (
+      <div className="flex items-center justify-center min-h-screen">
+        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-gray-900"></div>
+      </div>
+    );
+  }
 
   return (
-    <>
-      <div className="space-y-4 p-4 pb-20 md:pb-4">
-      <h1 className="text-2xl font-bold text-center text-foreground mt-2 mb-4">Featured Listings</h1>
-      <div className="grid grid-cols-2 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
-        {isLoading
-            ? Array(8)
-                .fill(0)
-                .map((_, index) => <ListingCardSkeleton key={index} />)
-            : listings.map((listing) => (
-          <Card key={listing._id} className="overflow-hidden group relative border-none shadow-sm">
-            <Link href={`/listing/${listing._id}`} className="block h-full">
-              <div className="relative aspect-video">
-                <Image
-                  src={listing.images[0] || "/placeholder.svg"}
-                  alt={listing.title}
-                  layout="fill"
-                  objectFit="cover"
-                  className="transition-transform group-hover:scale-105"
-                />
-                <div className="absolute inset-0 bg-black bg-opacity-20 transition-opacity group-hover:bg-opacity-30" />
-                <Button
-            variant="ghost"
-            size="icon"
-            className="absolute top-2 right-2 z-10 bg-black/70 text-white hover:bg-black"
-            onClick={(e) => {
-              e.preventDefault()
-              e.stopPropagation()
-              setSelectedListing(listing)
-            }}
-          >
-            <Eye className="h-4 w-4" />
-          </Button>
-              </div>
-              <CardContent className="p-3">
-                <h2 className="text-sm font-semibold line-clamp-2 text-foreground mb-1">{toTitleCase(listing.title)}</h2>
-                <div className="flex justify-between items-center">
-                  <div className="flex items-center text-xs text-muted-foreground">
-                    <MapPin className="h-3 w-3 mr-1" />
-                    {listing.location}
-                  </div>
-                  <span className="text-sm font-bold text-foreground">₦{Number(listing.price).toLocaleString("en-NG")}</span>
-                </div>
-              </CardContent>
-            </Link>
-          </Card>
-        ))}
-      </div>
-    </div>
+    <div className="container mx-auto py-10">
+      <h1 className="text-3xl font-bold mb-8">Dashboard</h1>
 
-      {selectedListing && (
-        <Dialog open={!!selectedListing} onOpenChange={() => setSelectedListing(null)}>
-          <DialogContent className="sm:max-w-[425px] w-[70vw] max-h-[80vh] h-auto overflow-hidden flex flex-col">
-            <DialogHeader>
-              <DialogTitle className="text-xl">{toTitleCase(selectedListing.title)}</DialogTitle>
-            </DialogHeader>
-            <div className="flex-grow flex flex-col gap-4 py-4">
-              <div className="relative aspect-square w-full flex-shrink-0" style={{ maxHeight: "40vh" }}>
-                <Image
-                  src={selectedListing.images[0] || "/placeholder.svg"}
-                  alt={selectedListing.title}
-                  layout="fill"
-                  objectFit="cover"
-                  className="rounded-lg"
-                />
-              </div>
-              <div className="space-y-3 flex-shrink overflow-y-auto pr-2">
-                <p className="text-sm text-muted-foreground">{toTitleCase(selectedListing.description)}</p>
-                <div className="flex items-center justify-between">
-                  <Badge variant="secondary">{toTitleCase(selectedListing.category)}</Badge>
-                  <span className="font-bold text-lg">₦{Number(selectedListing.price).toLocaleString("en-NG")}</span>
-                </div>
-                <p className="text-sm">📍 {toTitleCase(selectedListing.location)}</p>
+      <div className="grid gap-8 mb-8 md:grid-cols-2">
+        <Card>
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium">Welcome back</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="flex items-center space-x-4">
+              <Avatar className="h-20 w-20">
+                <AvatarImage src={user?.avatar || "https://github.com/shadcn.png"} alt={user?.name || "User"} />
+                <AvatarFallback>{user?.name?.charAt(0) || "U"}</AvatarFallback>
+              </Avatar>
+              <div>
+                <p className="text-2xl font-bold">{user?.name || "Loading..."}</p>
+                <p className="text-sm text-muted-foreground">{user?.email || "Loading..."}</p>
               </div>
             </div>
-            <DialogFooter>
-              <Link href={`/listing/${selectedListing._id}`} className="w-full">
-                <Button className="w-full" size="lg">
-                  View Full Details
-                  <ExternalLink className="ml-2 h-4 w-4" />
-                </Button>
-              </Link>
-            </DialogFooter>
-          </DialogContent>
-        </Dialog>
-      )}
-    </>
-  )
-}
+          </CardContent>
+        </Card>
 
+        <Card>
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium">Quick Actions</CardTitle>
+          </CardHeader>
+          <CardContent className="flex items-center justify-between">
+            <Button onClick={() => router.push("/post-listing")}>
+              <ListPlus className="mr-2 h-4 w-4" /> New Listing
+            </Button>
+            <Button variant="outline" size="sm" onClick={handleLogout}>
+              <LogOut className="mr-2 h-4 w-4" /> Log Out
+            </Button>
+          </CardContent>
+        </Card>
+      </div>
+
+      {/* WhatsApp Update Dialog */}
+      <Card className="mb-8 max-w-md mx-auto">
+        <CardHeader>
+          <CardTitle>WhatsApp Contact</CardTitle>
+          <CardDescription>
+            {user?.whatsapp
+              ? "Your WhatsApp number is set. Update it if needed."
+              : "Add your WhatsApp number for notifications and support."}
+          </CardDescription>
+        </CardHeader>
+        <CardContent>
+          <div className="space-y-2">
+            <p className="text-sm">
+              {user?.whatsapp ? `Current: ${user.whatsapp}` : "No WhatsApp number provided."}
+            </p>
+            <Dialog>
+              <DialogTrigger asChild>
+                <Button variant="outline" size="sm">
+                  Update WhatsApp
+                </Button>
+              </DialogTrigger>
+              <DialogContent>
+                <DialogHeader>
+                  <DialogTitle>Update WhatsApp Number</DialogTitle>
+                  <DialogDescription>
+                    Enter your WhatsApp number. It will be automatically prefixed with +234.
+                  </DialogDescription>
+                </DialogHeader>
+                <Input
+                  placeholder="Enter your WhatsApp number"
+                  value={whatsappNumber}
+                  onChange={(e) => setWhatsappNumber(e.target.value)}
+                />
+                <DialogFooter>
+                  <Button onClick={handleUpdateWhatsapp} disabled={updatingWhatsapp}>
+                    {updatingWhatsapp ? "Updating..." : "Update"}
+                  </Button>
+                </DialogFooter>
+              </DialogContent>
+            </Dialog>
+          </div>
+        </CardContent>
+      </Card>
+
+      <Tabs defaultValue="active" className="space-y-4">
+        <TabsList>
+          <TabsTrigger value="active">Active Listings</TabsTrigger>
+          <TabsTrigger value="analytics">Analytics</TabsTrigger>
+        </TabsList>
+        <TabsContent value="active" className="space-y-4">
+          <Card>
+            <CardHeader>
+              <CardTitle>Active Listings</CardTitle>
+              <CardDescription>Your current active listings on the marketplace.</CardDescription>
+            </CardHeader>
+            <CardContent>
+              {isLoading ? (
+                <p>Loading...</p>
+              ) : activeListings.length > 0 ? (
+                <div className="space-y-4">
+                  {activeListings.map((listing) => (
+                    <div key={listing._id} 
+                    className="flex items-center justify-between border-b pb-2 cursor-pointer overflow-hidden group relative border-none shadow-sm"
+                    onClick={() => router.push(`/listing/${listing._id}`)}
+                    >
+                      <div>
+                        <p className="font-medium">{toTitleCase(listing.title)}</p>
+                        <Badge variant="secondary">{listing.category}</Badge>
+                      </div>
+                      <p className="font-bold">₦{Number(listing.price).toLocaleString("en-NG")}</p>
+                    </div>
+                  ))}
+                </div>
+              ) : (
+                <p>No listings found.</p>
+              )}
+            </CardContent>
+          </Card>
+        </TabsContent>
+        <TabsContent value="analytics" className="space-y-4">
+          <Card>
+            <CardHeader>
+              <CardTitle>Analytics</CardTitle>
+              <CardDescription>Your listing performance over time.</CardDescription>
+            </CardHeader>
+            <CardContent className="pl-2">
+              <BarChart className="h-60 w-full text-muted-foreground" />
+            </CardContent>
+          </Card>
+        </TabsContent>
+      </Tabs>
+    </div>
+  );
+}
