@@ -54,7 +54,7 @@ export default function Home() {
   // Initial load
   useEffect(() => {
     fetchListings();
-  }, []);
+  }, [fetchListings]);
 
   // Intersection Observer to load more listings on scroll
   useEffect(() => {
