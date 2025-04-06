@@ -5,7 +5,7 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import Image from "next/image";
 import Link from "next/link";
-import { Eye, ExternalLink, MapPin } from "lucide-react";
+import { Eye, ExternalLink, MapPin, Loader2 } from "lucide-react";
 import { useState, useEffect, useRef, useCallback } from "react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { toTitleCase } from "@/app/utils/stringUtils";
@@ -20,80 +20,120 @@ export default function Home() {
   const [skip, setSkip] = useState(0);
   const limit = 10; // Number of listings to fetch per call
   const [hasMore, setHasMore] = useState(true);
-  const [isLoading, setIsLoading] = useState(true);
+  const [isLoading, setIsLoading] = useState(false);
+  const [isInitialLoading, setIsInitialLoading] = useState(true);
 
   // For the dialog that shows individual listing details
   const [selectedListing, setSelectedListing] = useState<any>(null);
   const router = useRouter();
   const observerRef = useRef<HTMLDivElement>(null);
 
-  // Fetch listings with pagination
-  const fetchListings = useCallback(async () => {
+  // Fetch initial listings
+  useEffect(() => {
+    const fetchInitialListings = async () => {
+      try {
+        setIsInitialLoading(true);
+        const res = await fetch(`${API_URL}/listings?skip=0&limit=${limit}`);
+        if (!res.ok) {
+          throw new Error("Failed to fetch initial listings");
+        }
+        const data = await res.json();
+        const initialListings = data.listings || data;
+        
+        if (initialListings.length < limit) {
+          setHasMore(false);
+        }
+        
+        setListings(initialListings);
+        setSkip(initialListings.length);
+      } catch (error) {
+        console.error("Error fetching initial listings:", error);
+      } finally {
+        setIsInitialLoading(false);
+      }
+    };
+
+    fetchInitialListings();
+  }, []);
+
+  // Fetch more listings function (separate from initial load)
+  const fetchMoreListings = useCallback(async () => {
+    if (isLoading || !hasMore) return;
+    
     try {
       setIsLoading(true);
       const res = await fetch(`${API_URL}/listings?skip=${skip}&limit=${limit}`);
       if (!res.ok) {
-        throw new Error("Failed to fetch listings");
+        throw new Error("Failed to fetch more listings");
       }
+      
       const data = await res.json();
-      //console.log(data)
-      // Expecting data.listings to be returned from your backend
       const newListings = data.listings || data;
-      if (newListings.length < limit) {
+      
+      if (newListings.length === 0 || newListings.length < limit) {
         setHasMore(false);
       }
-      setListings((prev) => [...prev, ...newListings]);
-      setSkip((prev) => prev + newListings.length);
+      
+      // Deduplicate listings before adding them
+      setListings(prevListings => {
+        const existingIds = new Set(prevListings.map(item => item._id));
+        const uniqueNewListings = newListings.filter(
+          listing => !existingIds.has(listing._id)
+        );
+        
+        return [...prevListings, ...uniqueNewListings];
+      });
+      
+      setSkip(prev => prev + newListings.length);
+      
     } catch (error) {
-      console.error("Error fetching listings:", error);
+      console.error("Error fetching more listings:", error);
     } finally {
       setIsLoading(false);
     }
-  }, [skip]);
+  }, [isLoading, hasMore, skip]);
 
-  // Initial load
+  // Set up intersection observer for infinite scroll
   useEffect(() => {
-    fetchListings();
-  }, [fetchListings]);
-
-  // Intersection Observer to load more listings on scroll
-  useEffect(() => {
-    if (isLoading || !hasMore) return;
+    if (isInitialLoading || !hasMore) return;
+    
     const observer = new IntersectionObserver(
-      (entries) => {
-        if (entries[0].isIntersecting) {
-          fetchListings();
+      entries => {
+        if (entries[0].isIntersecting && !isLoading) {
+          fetchMoreListings();
         }
       },
-      { threshold: 1.0 }
+      { rootMargin: '0px 0px 200px 0px' } // Load more content before reaching the bottom
     );
+    
     if (observerRef.current) {
       observer.observe(observerRef.current);
     }
+    
     return () => {
       if (observerRef.current) {
         observer.unobserve(observerRef.current);
       }
     };
-  }, [isLoading, hasMore, fetchListings]);
+  }, [isInitialLoading, isLoading, hasMore, fetchMoreListings]);
 
   return (
     <>
       <div className="space-y-4 p-4 pb-20 md:pb-4">
         <h1 className="text-2xl font-bold text-center text-foreground mt-2 mb-4">Featured Listings</h1>
+        
+        {/* Main grid for listings */}
         <div className="grid grid-cols-2 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
-          {listings.length === 0 && isLoading
+          {isInitialLoading
             ? Array(8)
                 .fill(0)
-                .map((_, index) => <ListingCardSkeleton key={index} />)
+                .map((_, index) => <ListingCardSkeleton key={`skeleton-${index}`} />)
             : listings.map((listing) => (
                 <Card key={listing._id} className="overflow-hidden group relative border-none shadow-sm">
                   <Link href={`/listing/${listing._id}`} className="block h-full">
                     <div className="relative aspect-video">
                       <Image
-                        src={
-                         // listing.images.length ? listing.images[listing.images.length - 1] : "/placeholder.svg"}
-                         listing.images[0]|| "/placeholder.svg"}
+                        src={listing.images[0] || "/placeholder.svg"}
                         alt={listing.title}
                         layout="fill"
                         objectFit="cover"
@@ -133,20 +173,25 @@ export default function Home() {
         </div>
       </div>
 
+      {/* Loading indicator for additional content */}
       {isLoading && (
-        <div className="text-center my-4">
-          <p>Loading...</p>
+        <div className="flex justify-center items-center py-4 my-2">
+          <Loader2 className="h-6 w-6 animate-spin text-primary mr-2" />
+          <p>Loading more listings...</p>
         </div>
       )}
-      {!isLoading && !hasMore && (
-        <div className="text-center my-4">
-          <p>No more listings</p>
+      
+      {/* End of content message */}
+      {!isLoading && !hasMore && listings.length > 0 && (
+        <div className="text-center my-4 text-muted-foreground">
+          <p>You've reached the end of the listings</p>
         </div>
       )}
 
-      {/* Sentinel div for triggering infinite scroll */}
-      <div ref={observerRef} className="h-4"></div>
+      {/* Observer target */}
+      <div ref={observerRef} className="h-2 mb-4"></div>
 
+      {/* Listing preview dialog */}
       {selectedListing && (
         <Dialog open={!!selectedListing} onOpenChange={() => setSelectedListing(null)}>
           <DialogContent className="sm:max-w-[425px] w-[70vw] max-h-[80vh] h-auto overflow-hidden flex flex-col">

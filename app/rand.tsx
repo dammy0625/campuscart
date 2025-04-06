@@ -36,13 +36,27 @@ export default function Home() {
         throw new Error("Failed to fetch listings");
       }
       const data = await res.json();
-      console.log(data)
+      //console.log(data)
       // Expecting data.listings to be returned from your backend
       const newListings = data.listings || data;
       if (newListings.length < limit) {
         setHasMore(false);
       }
-      setListings((prev) => [...prev, ...newListings]);
+      
+      // Deduplicate listings before setting state
+      setListings((prevListings) => {
+        // Create a Set of existing IDs for O(1) lookup
+        const existingIds = new Set(prevListings.map(item => item._id));
+        
+        // Filter out any new listings that already exist in our state
+        const uniqueNewListings = newListings.filter(
+          listing => !existingIds.has(listing._id)
+        );
+        
+        return [...prevListings, ...uniqueNewListings];
+      });
+      
+      // Only increase skip by the number of unique items we actually added
       setSkip((prev) => prev + newListings.length);
     } catch (error) {
       console.error("Error fetching listings:", error);
@@ -54,7 +68,7 @@ export default function Home() {
   // Initial load
   useEffect(() => {
     fetchListings();
-  }, []);
+  }, [fetchListings]);
 
   // Intersection Observer to load more listings on scroll
   useEffect(() => {
@@ -85,7 +99,7 @@ export default function Home() {
           {listings.length === 0 && isLoading
             ? Array(8)
                 .fill(0)
-                .map((_, index) => <ListingCardSkeleton key={index} />)
+                .map((_, index) => <ListingCardSkeleton key={`skeleton-${index}`} />)
             : listings.map((listing) => (
                 <Card key={listing._id} className="overflow-hidden group relative border-none shadow-sm">
                   <Link href={`/listing/${listing._id}`} className="block h-full">
