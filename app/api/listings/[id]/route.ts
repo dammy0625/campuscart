@@ -4,13 +4,12 @@ import Listing from "@/models/Listing"
 
 export async function GET(
   request: Request, 
-  context: { params: { id: string } }
+  { params }: { params: { id: string } }
 ) {
   try {
     await dbConnect()
     
-    // Extract id from context.params
-    const { id } = context.params
+    const { id } = params
     
     // First try to find by MongoDB _id
     let listing = await Listing.findById(id)
@@ -30,5 +29,3 @@ export async function GET(
     return NextResponse.json({ error: "Failed to fetch listing" }, { status: 500 })
   }
 }
-
-
