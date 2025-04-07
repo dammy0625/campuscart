@@ -67,7 +67,8 @@ interface ListingType {
 
 export default function Dashboard() {
   const [user, setUser] = useState<any>(null);
-  const [activeListings, setActiveListings] = useState([]);
+  //const [activeListings, setActiveListings] = useState([]);
+  const [activeListings, setActiveListings] = useState<ListingType[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [whatsappNumber, setWhatsappNumber] = useState("");
   const [updatingWhatsapp, setUpdatingWhatsapp] = useState(false);
