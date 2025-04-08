@@ -14,9 +14,21 @@ import { ListingCardSkeleton } from "@/components/listing-card-skeleton";
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL;
 
+// Define a type for the listing object
+interface Listing {
+  _id: string;
+  title: string;
+  price: number | string;
+  description: string;
+  category: string;
+  location: string;
+  images: string[];
+  [key: string]: any; // For any other properties we might be using
+}
+
 export default function Home() {
   // Listings state and pagination states for infinite scroll
-  const [listings, setListings] = useState<any[]>([]);
+  const [listings, setListings] = useState<Listing[]>([]);
   const [skip, setSkip] = useState(0);
   const limit = 10; // Number of listings to fetch per call
   const [hasMore, setHasMore] = useState(true);
@@ -24,7 +36,7 @@ export default function Home() {
   const [isInitialLoading, setIsInitialLoading] = useState(true);
 
   // For the dialog that shows individual listing details
-  const [selectedListing, setSelectedListing] = useState<any>(null);
+  const [selectedListing, setSelectedListing] = useState<Listing | null>(null);
   const router = useRouter();
   const observerRef = useRef<HTMLDivElement>(null);
 
@@ -78,7 +90,7 @@ export default function Home() {
       setListings(prevListings => {
         const existingIds = new Set(prevListings.map(item => item._id));
         const uniqueNewListings = newListings.filter(
-          listing => !existingIds.has(listing._id)
+          (listing: Listing) => !existingIds.has(listing._id)
         );
         
         return [...prevListings, ...uniqueNewListings];
