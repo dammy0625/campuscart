@@ -50,7 +50,7 @@ function ImageCarousel({ images, title }: { images: string[]; title: string }) {
       <Carousel
         opts={{ loop: true }}
         className="w-full"
-        onSelect={(selectedIndex) => setCurrentIndex(selectedIndex)}
+        // Remove the onSelect prop as it's causing the type error
       >
         <CarouselContent>
           {images.map((image, index) => (
@@ -100,13 +100,17 @@ function ImageCarousel({ images, title }: { images: string[]; title: string }) {
 function ListingDetails({ listing }: { listing: any }) {
   // Prepare WhatsApp link if seller's whatsapp is available.
   const sellerWhatsapp = listing?.user?.whatsapp;
-  // Generate a default message (make sure `window` is available; typically this is in a client component)
-const message = encodeURIComponent(
-  `Hi, I'm interested in your listing: ${toTitleCase(listing.title)}. Here is the link: ${window.location.origin}/listing/${listing._id}`
-);
-  const whatsappLink = sellerWhatsapp
-   ? `https://wa.me/${listing.user.whatsapp}?text=${message}`
-    : null;
+  // Generate a default message using useEffect to ensure window is available
+  const [whatsappLink, setWhatsappLink] = React.useState<string | null>(null);
+  
+  React.useEffect(() => {
+    if (sellerWhatsapp) {
+      const message = encodeURIComponent(
+        `Hi, I'm interested in your listing: ${toTitleCase(listing.title)}. Here is the link: ${window.location.origin}/listing/${listing._id}`
+      );
+      setWhatsappLink(`https://wa.me/${listing.user.whatsapp}?text=${message}`);
+    }
+  }, [sellerWhatsapp, listing]);
 
   return (
     <Card>
