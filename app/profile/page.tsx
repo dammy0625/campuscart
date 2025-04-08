@@ -57,7 +57,13 @@ export default function ProfilePage() {
         await login({ email: formData.email, password: formData.password });
         router.replace("/dashboard");
       } catch (err) {
-        setSignupError(err.message);
+
+        if (err instanceof Error) {
+          setSignupError(err.message);
+        } else {
+          // Handle the case where err is not an Error object
+          setSignupError("An unknown error occurred");
+        }
       }
     }
   };
