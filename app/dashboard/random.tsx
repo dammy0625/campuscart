@@ -113,4 +113,3 @@ export default function Header() {
 
 
 
-md:hidden fixed bottom-3 left-4 right-4 z-50 flex justify-between border border-border/40 bg-background py-2 px-2 shadow-md
