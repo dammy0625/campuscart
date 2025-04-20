@@ -9,6 +9,7 @@ import { Carousel, CarouselContent, CarouselItem, CarouselNext, CarouselPrevious
 import { MapPin, Calendar, DollarSign, Tag, Eye } from "lucide-react";
 import { toTitleCase } from "@/app/utils/stringUtils";
 import { cn } from "@/lib/utils";
+import { motion } from "framer-motion"
 
 // Async function to fetch listing
 async function getListing(id: string) {
@@ -144,9 +145,11 @@ function ListingDetails({ listing }: { listing: any }) {
         <div className="flex flex-col space-y-4">
           {whatsappLink ? (
             <a href={whatsappLink} target="_blank" rel="noopener noreferrer">
+              <motion.div whileTap={{ scale: 0.9 }}>
               <Button className="w-full" size="lg">
                 Contact Seller on WhatsApp
               </Button>
+              </motion.div>
             </a>
           ) : (
             <Button className="w-full" size="lg" disabled>

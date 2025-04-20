@@ -43,6 +43,7 @@ import {
   DialogFooter,
   DialogTrigger,
 } from "@/components/ui/dialog";
+import { motion } from "framer-motion"
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL;
 
@@ -202,12 +203,17 @@ export default function Dashboard() {
             <CardTitle className="text-sm font-medium">Quick Actions</CardTitle>
           </CardHeader>
           <CardContent className="flex items-center justify-between">
+          <motion.div whileTap={{ scale: 0.9 }}>
             <Button onClick={() => router.push("/post-listing")}>
               <ListPlus className="mr-2 h-4 w-4" /> New Listing
             </Button>
+            </motion.div>
+            
+<motion.div whileTap={{ scale: 0.9 }}>
             <Button variant="outline" size="sm" onClick={handleLogout}>
               <LogOut className="mr-2 h-4 w-4" /> Log Out
             </Button>
+            </motion.div>
           </CardContent>
         </Card>
       </div>
@@ -229,9 +235,11 @@ export default function Dashboard() {
             </p>
             <Dialog>
               <DialogTrigger asChild>
+              <motion.div whileTap={{ scale: 0.9 }}>
                 <Button variant="outline" size="sm">
                   Update WhatsApp
                 </Button>
+                </motion.div>
               </DialogTrigger>
               <DialogContent>
                 <DialogHeader>
@@ -246,9 +254,11 @@ export default function Dashboard() {
                   onChange={(e) => setWhatsappNumber(e.target.value)}
                 />
                 <DialogFooter>
+                <motion.div whileTap={{ scale: 0.9 }}>
                   <Button onClick={handleUpdateWhatsapp} disabled={updatingWhatsapp}>
                     {updatingWhatsapp ? "Updating..." : "Update"}
                   </Button>
+                  </motion.div>
                 </DialogFooter>
               </DialogContent>
             </Dialog>
@@ -267,6 +277,7 @@ export default function Dashboard() {
               <CardTitle>Active Listings</CardTitle>
               <CardDescription>Your current active listings on the marketplace.</CardDescription>
             </CardHeader>
+            
             <CardContent>
               {isLoading ? (
                 <p>Loading...</p>
@@ -289,6 +300,7 @@ export default function Dashboard() {
                 <p>No listings found.</p>
               )}
             </CardContent>
+            
           </Card>
         </TabsContent>
         <TabsContent value="analytics" className="space-y-4">

@@ -4,6 +4,7 @@ import "./globals.css"
 import { Inter } from "next/font/google"
 import Header from "./components/Header"
 import Footer from "./components/Footer"
+import MobileNav from "./components/MobileNav"
 import type React from "react"
 import { Toaster } from "sonner";
 import { AuthProvider } from "./contexts/AuthContext";
@@ -36,8 +37,9 @@ export default function RootLayout({
           <Header />
           <Toaster position="top-right" richColors />
           <div className="flex-1">
-            <main className="container mx-auto px-4 py-8">{children}</main>
+            <main className="container mx-auto pb-24 px-4 py-8">{children}</main>
           </div>
+          <MobileNav />
           <Footer />
         </div>
        

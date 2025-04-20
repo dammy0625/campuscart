@@ -73,7 +73,44 @@ export default function Header() {
                     </Link>
                 </div>
             </div>
-            
+            <nav className="md:hidden flex justify-between border-t border-border/40 bg-background py-2 px-2">
+                <Link href="/" className="flex-1 mx-[2px]">
+                    <Button
+                        variant={pathname === "/" ? "default" : "ghost"}
+                        size="sm"
+                        className={`flex flex-col items-center justify-center h-auto py-1 w-full bg-white text-black hover:bg-black hover:text-white transition-colors ${pathname === "/" ? "bg-black text-white" : ""}`}
+                    >
+                        <Home className="h-5 w-5 mb-1" />
+                        <span className="text-xs">Home</span>
+                    </Button>
+                </Link>
+                <Link href="/post-listing" className="flex-1 mx-[2px]">
+                    <Button
+                        variant={pathname === "/post-listing" ? "default" : "ghost"}
+                        size="sm"
+                        className={`flex flex-col items-center justify-center h-auto py-1 w-full bg-white text-black hover:bg-black hover:text-white transition-colors ${pathname === "/post-listing" ? "bg-black text-white" : ""}`}
+                    >
+                        <PlusCircle className="h-5 w-5 mb-1" />
+                        <span className="text-xs">Post</span>
+                    </Button>
+                </Link>
+                <Link href="/dashboard" className="flex-1 mx-[2px]">
+                    <Button
+                        variant={pathname === "/dashboard" ? "default" : "ghost"}
+                        size="sm"
+                        className={`flex flex-col items-center justify-center h-auto py-1 w-full bg-white text-black hover:bg-black hover:text-white transition-colors ${pathname === "/profile" ? "bg-black text-white" : ""}`}
+                    >
+                        <UserCircle className="h-5 w-5 mb-1" />
+                        <span className="text-xs">Profile</span>
+                    </Button>
+                </Link>
+            </nav>
         </header>
     )
 }
+
+
+
+
+
+md:hidden fixed bottom-3 left-4 right-4 z-50 flex justify-between border border-border/40 bg-background py-2 px-2 shadow-md

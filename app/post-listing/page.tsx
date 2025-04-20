@@ -11,7 +11,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Book, Laptop, SofaIcon as Couch, Shirt, Package, Upload, Tag, Banknote, MapPin, FileText } from "lucide-react"
 import { toast } from "sonner"
 import { useAuth } from "../contexts/AuthContext" // Make sure this path is correct
-
+import { motion } from "framer-motion"
 
 export default function PostListing() {
   const router = useRouter()
@@ -247,6 +247,7 @@ export default function PostListing() {
               <p className="text-sm text-muted-foreground mt-2">{formData.images.length} image(s) selected</p>
             )}
           </div>
+          <motion.div whileTap={{ scale: 0.9 }}>
           <Button type="submit" className="w-full" disabled={isSubmitting}>
             {isSubmitting ? (
               <div className="flex items-center space-x-2">
@@ -257,6 +258,7 @@ export default function PostListing() {
               "Post Listing"
             )}
           </Button>
+          </motion.div>
         </form>
       </CardContent>
     </Card>

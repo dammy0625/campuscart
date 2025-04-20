@@ -11,6 +11,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "
 import { toTitleCase } from "@/app/utils/stringUtils";
 import { useRouter } from "next/navigation";
 import { ListingCardSkeleton } from "@/components/listing-card-skeleton";
+import { motion } from "framer-motion"
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL;
 
@@ -239,10 +240,12 @@ export default function Home() {
             </div>
             <DialogFooter>
               <Link href={`/listing/${selectedListing._id}`} className="w-full">
+              <motion.div whileTap={{ scale: 0.9 }}>
                 <Button className="w-full" size="lg">
                   View Full Details
                   <ExternalLink className="ml-2 h-4 w-4" />
                 </Button>
+                </motion.div>
               </Link>
             </DialogFooter>
           </DialogContent>

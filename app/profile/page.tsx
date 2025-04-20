@@ -8,6 +8,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Icons } from "@/components/icons";
 import { useAuth } from "../contexts/AuthContext";
+import { motion } from "framer-motion"
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL;
 
@@ -126,16 +127,18 @@ export default function ProfilePage() {
                 required
               />
             </div>
+            <motion.div whileTap={{ scale: 0.9 }}>
             <Button type="submit" className="w-full" disabled={loading}>
               {loading ? "Processing..." : isLogin ? "Login" : "Sign Up"}
             </Button>
+            </motion.div>
           </form>
-
+          <motion.div whileTap={{ scale: 0.9 }}>
           <Button variant="outline" className="w-full mt-4" onClick={handleGoogleAuth} disabled={loading}>
             <Icons.google className="mr-2 h-4 w-4" />
             {isLogin ? "Login with Google" : "Sign up with Google"}
           </Button>
-
+          </motion.div>
           {/* Toggle Button */}
           <p className="text-sm text-center mt-4">
             {isLogin ? "Don't have an account?" : "Already have an account?"}{" "}
