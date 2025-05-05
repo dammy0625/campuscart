@@ -42,7 +42,7 @@ export default function Header() {
                             alt="Campus Cart"
                             width={400}
                             height={50}
-                            className="h-20 w-auto md:h-22"
+                            className="h-10 w-auto md:h-12"
                         />
                     </Link>
                 </div>
