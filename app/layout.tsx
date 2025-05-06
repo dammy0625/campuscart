@@ -2,6 +2,7 @@
 
 import "./globals.css"
 import { Inter } from "next/font/google"
+import { ThemeProvider } from 'next-themes'
 import Header from "./components/Header"
 import Footer from "./components/Footer"
 import MobileNav from "./components/MobileNav"
@@ -32,7 +33,7 @@ export default function RootLayout({
     <AuthProvider>
     <html lang="en" className="dark">
       <body className={`${inter.className} min-h-screen bg-background font-sans antialiased`}>
-      
+      <ThemeProvider attribute="class" defaultTheme="dark" enableSystem>
         <div className="relative flex min-h-screen flex-col">
           <Header />
           <Toaster position="top-right" richColors />
@@ -42,7 +43,7 @@ export default function RootLayout({
           <MobileNav />
           <Footer />
         </div>
-       
+        </ThemeProvider>
       </body>
     </html>
     </AuthProvider>

@@ -7,6 +7,7 @@ import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Search, PlusCircle, Bell, UserCircle, Home } from "lucide-react"
 import Image from "next/image"
+import ThemeToggle from '@/components/ui/ThemeToggle'
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL;
 
@@ -57,9 +58,9 @@ export default function Header() {
                             className="pl-8 pr-4 h-9"
                         />
                     </form>
-                    <Button variant="ghost" size="icon" className="hidden md:flex">
-                        <Bell className="h-5 w-5" />
-                    </Button>
+                    <ThemeToggle />
+
+                   
                     <Link href="/post-listing" className="hidden md:inline-flex">
                         <Button className="bg-white text-black hover:bg-black hover:text-white transition-colors whitespace-nowrap">
                             <PlusCircle className="mr-2 h-4 w-4" />

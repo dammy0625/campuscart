@@ -5,11 +5,26 @@ import Image from "next/image";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Carousel, CarouselContent, CarouselItem, CarouselNext, CarouselPrevious } from "@/components/ui/carousel";
-import { MapPin, Calendar, DollarSign, Tag, Eye } from "lucide-react";
+import {
+  Carousel,
+  CarouselContent,
+  CarouselItem,
+  CarouselNext,
+  CarouselPrevious,
+} from "@/components/ui/carousel";
+import {
+  MapPin,
+  Calendar,
+  DollarSign,
+  Tag,
+  Eye,
+  Phone,
+} from "lucide-react";
+import { FaWhatsapp } from "react-icons/fa";
+
 import { toTitleCase } from "@/app/utils/stringUtils";
 import { cn } from "@/lib/utils";
-import { motion } from "framer-motion"
+import { motion } from "framer-motion";
 
 // Async function to fetch listing
 async function getListing(id: string) {
@@ -51,7 +66,6 @@ function ImageCarousel({ images, title }: { images: string[]; title: string }) {
       <Carousel
         opts={{ loop: true }}
         className="w-full"
-        // Remove the onSelect prop as it's causing the type error
       >
         <CarouselContent>
           {images.map((image, index) => (
@@ -85,7 +99,7 @@ function ImageCarousel({ images, title }: { images: string[]; title: string }) {
             <CardContent className="p-0">
               <img
                 src={`${image}?w=300&q=50`}
-                alt={`${title} - Image`}
+                alt={`${title} - Thumbnail`}
                 width={300}
                 height={300}
                 className="object-cover rounded-lg"
@@ -99,17 +113,15 @@ function ImageCarousel({ images, title }: { images: string[]; title: string }) {
 }
 
 function ListingDetails({ listing }: { listing: any }) {
-  // Prepare WhatsApp link if seller's whatsapp is available.
   const sellerWhatsapp = listing?.user?.whatsapp;
-  // Generate a default message using useEffect to ensure window is available
   const [whatsappLink, setWhatsappLink] = React.useState<string | null>(null);
-  
+
   React.useEffect(() => {
     if (sellerWhatsapp) {
       const message = encodeURIComponent(
         `Hi, I'm interested in your listing: ${toTitleCase(listing.title)}. Here is the link: ${window.location.origin}/listing/${listing._id}`
       );
-      setWhatsappLink(`https://wa.me/${listing.user.whatsapp}?text=${message}`);
+      setWhatsappLink(`https://wa.me/${sellerWhatsapp}?text=${message}`);
     }
   }, [sellerWhatsapp, listing]);
 
@@ -139,16 +151,19 @@ function ListingDetails({ listing }: { listing: any }) {
 
         <div>
           <h2 className="text-xl font-semibold mb-2">Description</h2>
-          <p className="text-muted-foreground whitespace-pre-wrap">{toTitleCase(listing.description)}</p>
+          <p className="text-muted-foreground whitespace-pre-wrap">
+            {toTitleCase(listing.description)}
+          </p>
         </div>
 
         <div className="flex flex-col space-y-4">
           {whatsappLink ? (
             <a href={whatsappLink} target="_blank" rel="noopener noreferrer">
-              <motion.div whileTap={{ scale: 0.9 }}>
-              <Button className="w-full" size="lg">
-                Contact Seller on WhatsApp
-              </Button>
+              <motion.div whileTap={{ scale: 0.95 }}>
+                <Button className="w-full" size="lg">
+                  <FaWhatsapp className="h-5 w-5 mr-2" />
+                  Contact Seller on WhatsApp
+                </Button>
               </motion.div>
             </a>
           ) : (
@@ -156,6 +171,7 @@ function ListingDetails({ listing }: { listing: any }) {
               Seller did not provide WhatsApp contact
             </Button>
           )}
+
           <Button variant="outline" className="w-full" size="lg">
             <Eye className="mr-2 h-4 w-4" />
             {listing.views || 0} Views
