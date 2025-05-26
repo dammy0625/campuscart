@@ -1,10 +1,6 @@
-// app/listing/[id]/page.tsx
 import ListingClient from "./ListingClient";
 
-interface PageProps {
-  params: { id: string };
-}
-
-export default async function ListingPage({ params }: PageProps) {
-  return <ListingClient id={params.id} />;
+export default async function ListingPage(props: { params: { id: string } }) {
+  const { id } = await props.params;
+  return <ListingClient id={id} />;
 }
