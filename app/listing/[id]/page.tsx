@@ -5,6 +5,6 @@ interface PageProps {
   params: { id: string };
 }
 
-export default function ListingPage({ params }: PageProps) {
+export default async function ListingPage({ params }: PageProps) {
   return <ListingClient id={params.id} />;
 }
