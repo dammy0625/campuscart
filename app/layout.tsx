@@ -14,7 +14,7 @@ import { Providers } from "./providers";
 
 const inter = Inter({
   subsets: ["latin"],
-  display: "swap",
+ // display: "swap",
 })
 
 export const metadata = {
