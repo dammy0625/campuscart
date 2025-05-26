@@ -9,7 +9,7 @@ import MobileNav from "./components/MobileNav"
 import type React from "react"
 import { Toaster } from "sonner";
 import { AuthProvider } from "./contexts/AuthContext";
-
+import { Providers } from "./providers";
 
 
 const inter = Inter({
@@ -31,8 +31,10 @@ export default function RootLayout({
 
   return (
     <AuthProvider>
-    <html lang="en" className="dark">
+    <html lang="en" className="dark" suppressHydrationWarning>
       <body className={`${inter.className} min-h-screen bg-background font-sans antialiased`}>
+      <Providers>
+     
       <ThemeProvider attribute="class" defaultTheme="dark" enableSystem>
         <div className="relative flex min-h-screen flex-col">
           <Header />
@@ -44,6 +46,7 @@ export default function RootLayout({
           <Footer />
         </div>
         </ThemeProvider>
+        </Providers>
       </body>
     </html>
     </AuthProvider>

@@ -39,11 +39,12 @@ export default function Header() {
                 <div className="flex items-center">
                     <Link href="/" className="flex items-center space-x-2">
                         <Image
-                            src="/logo.jpg"
+                            src="/campuslog.png"
                             alt="Campus Cart"
-                            width={400}
-                            height={50}
-                            className="h-10 w-auto md:h-12"
+                            width={36}
+                            height={36}
+                            className="h-20 w-auto md:h-42"
+                            
                         />
                     </Link>
                 </div>
