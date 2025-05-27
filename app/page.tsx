@@ -13,7 +13,7 @@ import {
 import Image from "next/image";
 import Link from "next/link";
 import { Eye, ExternalLink, MapPin, Loader2 } from "lucide-react";
-import { useState, useEffect, useRef, useCallback } from "react";
+import { useState, useEffect, useRef, useCallback, Suspense } from "react";
 import {
   Dialog,
   DialogContent,
@@ -42,7 +42,8 @@ interface Listing {
   [key: string]: any;
 }
 
-export default function Home() {
+// Separate component that uses useSearchParams
+function HomeContent() {
   const [listings, setListings] = useState<Listing[]>([]);
   const [skip, setSkip] = useState(0);
   const [selectedLocation, setSelectedLocation] = useState<string>("");
@@ -112,26 +113,21 @@ export default function Home() {
   return (
     <>
       <div className="space-y-4 p-4 pb-20 md:pb-4">
-
         <div className="flex flex-col md:flex-row md:items-center md:justify-between mb-6 gap-4">
-  <h1 className="text-2xl font-bold text-foreground">Featured Listings</h1>
-  <div className="w-full md:w-[250px]">
-    <Select onValueChange={(value) => setSelectedLocation(value)}>
-      <SelectTrigger>
-        <SelectValue placeholder="Filter by School" />
-      </SelectTrigger>
-      <SelectContent>
-        {schoolLocations.map((school) => (
-          <SelectItem key={school} value={school}>{school}</SelectItem>
-        ))}
-      </SelectContent>
-    </Select>
-  </div>
-</div>
-
-
-
-        
+          <h1 className="text-2xl font-bold text-foreground">Featured Listings</h1>
+          <div className="w-full md:w-[250px]">
+            <Select onValueChange={(value) => setSelectedLocation(value)}>
+              <SelectTrigger>
+                <SelectValue placeholder="Filter by School" />
+              </SelectTrigger>
+              <SelectContent>
+                {schoolLocations.map((school) => (
+                  <SelectItem key={school} value={school}>{school}</SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+        </div>
 
         <div className="grid grid-cols-2 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
           {isInitialLoading
@@ -272,5 +268,28 @@ export default function Home() {
         </Dialog>
       )}
     </>
+  );
+}
+
+// Main component with Suspense boundary
+export default function Home() {
+  return (
+    <Suspense fallback={
+      <div className="space-y-4 p-4 pb-20 md:pb-4">
+        <div className="flex flex-col md:flex-row md:items-center md:justify-between mb-6 gap-4">
+          <h1 className="text-2xl font-bold text-foreground">Featured Listings</h1>
+          <div className="w-full md:w-[250px]">
+            <div className="h-10 bg-muted animate-pulse rounded-md"></div>
+          </div>
+        </div>
+        <div className="grid grid-cols-2 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
+          {Array(8).fill(0).map((_, index) => (
+            <ListingCardSkeleton key={`skeleton-${index}`} />
+          ))}
+        </div>
+      </div>
+    }>
+      <HomeContent />
+    </Suspense>
   );
 }
