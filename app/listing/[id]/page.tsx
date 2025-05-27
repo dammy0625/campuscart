@@ -1,6 +1,6 @@
 import ListingClient from "./ListingClient";
+export default async function Page({ params }: { params: Promise<{ id: string }> }) {
+  const { id } = await params;
 
-export default async function ListingPage(props: { params: { id: string } }) {
-  const { id } = await props.params;
   return <ListingClient id={id} />;
 }
