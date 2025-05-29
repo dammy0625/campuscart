@@ -10,6 +10,7 @@ import type React from "react"
 import { Toaster } from "sonner";
 import { AuthProvider } from "./contexts/AuthContext";
 import { Providers } from "./providers";
+import { Analytics } from '@vercel/analytics/next';
 
 
 const inter = Inter({
@@ -47,6 +48,7 @@ export default function RootLayout({
         </div>
         </ThemeProvider>
         </Providers>
+         <Analytics />
       </body>
     </html>
     </AuthProvider>
