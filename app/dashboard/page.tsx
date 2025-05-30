@@ -45,7 +45,7 @@ import {
 } from "@/components/ui/dialog";
 import { motion } from "framer-motion"
 
-const API_URL = process.env.NEXT_PUBLIC_API_URL;
+const API_URL = process.env.NEXT_PUBLIC_API_URL || "https://campuscart-backend-ee42358f2a62.herokuapp.com";
 
 // Define types to replace `any`
 interface UserType {
