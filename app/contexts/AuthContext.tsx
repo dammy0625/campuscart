@@ -85,12 +85,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       const data = await response.json();
       if (!response.ok) throw new Error(data.message || "Login failed");
 
-      Cookies.set("jwt", data.token, {
-        expires: 7,
-        path: "/",
-        secure: process.env.NODE_ENV === "production",
-        sameSite: "Lax",
-      });
+      
 
       setUser(data.user);
       setIsAuthenticated(true);
