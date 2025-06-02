@@ -28,7 +28,6 @@ import {
   LogOut,
 } from "lucide-react";
 import { toTitleCase } from "@/app/utils/stringUtils";
-//import Cookies from "js-cookie";
 import { useAuth } from "../contexts/AuthContext";
 import { toast } from "sonner";
 import { Input } from "@/components/ui/input";
@@ -46,6 +45,33 @@ import {
 import { motion } from "framer-motion"
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL || "https://campuscart-backend-ee42358f2a62.herokuapp.com";
+
+// Helper function to make authenticated requests with mobile fallback
+const makeAuthenticatedRequest = async (url: string, options: RequestInit = {}) => {
+  // First try with credentials (cookies)
+  let response = await fetch(url, {
+    ...options,
+    credentials: "include",
+    headers: {
+      "Content-Type": "application/json",
+      ...options.headers,
+    },
+  });
+
+  // If unauthorized and we have a sessionStorage token, try with Authorization header
+  if (response.status === 401 && typeof window !== 'undefined' && sessionStorage.getItem('mobile_jwt')) {
+    response = await fetch(url, {
+      ...options,
+      headers: {
+        "Content-Type": "application/json",
+        "Authorization": `Bearer ${sessionStorage.getItem('mobile_jwt')}`,
+        ...options.headers,
+      },
+    });
+  }
+
+  return response;
+};
 
 // Define types to replace `any`
 interface UserType {
@@ -68,21 +94,17 @@ interface ListingType {
 
 export default function Dashboard() {
   const [user, setUser] = useState<any>(null);
-  //const [activeListings, setActiveListings] = useState([]);
   const [activeListings, setActiveListings] = useState<ListingType[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [whatsappNumber, setWhatsappNumber] = useState("");
   const [updatingWhatsapp, setUpdatingWhatsapp] = useState(false);
   const router = useRouter();
 
-
   useEffect(() => {
     const fetchUserData = async () => {
       try {
-        const response = await fetch(`${API_URL}/api/auth/me`, {
+        const response = await makeAuthenticatedRequest(`${API_URL}/api/auth/me`, {
           method: "GET",
-          credentials: "include",
-          headers: { "Content-Type": "application/json" },
         });
 
         if (!response.ok) throw new Error("Failed to fetch user data");
@@ -107,11 +129,10 @@ export default function Dashboard() {
   useEffect(() => {
     const fetchUserListings = async () => {
       try {
-        const response = await fetch(`${API_URL}/user-listings`, {
+        const response = await makeAuthenticatedRequest(`${API_URL}/user-listings`, {
           method: "GET",
-          credentials: "include",
-          headers: { "Content-Type": "application/json" },
         });
+        
         if (!response.ok) throw new Error("Failed to fetch user listings");
         const data = await response.json();
         setActiveListings(data.listings || data);
@@ -144,12 +165,11 @@ export default function Dashboard() {
         formattedNumber = "+234" + formattedNumber;
       }
 
-      const response = await fetch(`${API_URL}/api/auth/update-whatsapp`, {
+      const response = await makeAuthenticatedRequest(`${API_URL}/api/auth/update-whatsapp`, {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
-        credentials: "include",
         body: JSON.stringify({ whatsapp: formattedNumber }),
       });
+      
       if (!response.ok) {
         throw new Error("Failed to update WhatsApp number");
       }

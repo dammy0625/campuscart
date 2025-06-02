@@ -32,6 +32,33 @@ const AuthContext = createContext<AuthContextType>({
 
 export const useAuth = () => useContext(AuthContext);
 
+// Helper function to make authenticated requests with fallback
+const makeAuthenticatedRequest = async (url: string, options: RequestInit = {}) => {
+  // First try with credentials (cookies)
+  let response = await fetch(url, {
+    ...options,
+    credentials: "include",
+    headers: {
+      "Content-Type": "application/json",
+      ...options.headers,
+    },
+  });
+
+  // If unauthorized and we have a sessionStorage token, try with Authorization header
+  if (response.status === 401 && typeof window !== 'undefined' && sessionStorage.getItem('mobile_jwt')) {
+    response = await fetch(url, {
+      ...options,
+      headers: {
+        "Content-Type": "application/json",
+        "Authorization": `Bearer ${sessionStorage.getItem('mobile_jwt')}`,
+        ...options.headers,
+      },
+    });
+  }
+
+  return response;
+};
+
 export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const [isAuthenticated, setIsAuthenticated] = useState<boolean>(false);
   const [loading, setLoading] = useState<boolean>(true);
@@ -40,11 +67,28 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const router = useRouter();
   const API_URL = process.env.NEXT_PUBLIC_API_URL;
 
+   // Handle mobile token from URL (for Safari mobile)
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      const urlParams = new URLSearchParams(window.location.search);
+      const mobileToken = urlParams.get('mobile_token');
+      
+      if (mobileToken) {
+        // Store token in sessionStorage for mobile Safari
+        sessionStorage.setItem('mobile_jwt', mobileToken);
+        // Clean up URL
+        window.history.replaceState({}, document.title, window.location.pathname);
+        // Force auth check after storing token
+        checkAuth();
+      }
+    }
+  }, []);
+
   const checkAuth = useCallback(async (): Promise<boolean> => {
     setLoading(true); // Ensure loading starts
     
     try {
-      const response = await fetch(`${API_URL}/api/auth/me`, {
+      const response = await makeAuthenticatedRequest(`${API_URL}/api/auth/me`, {
         method: "GET",
         credentials: "include", // Ensures cookies are sent with the request
       });
@@ -52,7 +96,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       if (!response.ok) throw new Error("Session expired");
   
       const data = await response.json();
-      setUser(data.user);
+      setUser(data.user || data );
       setIsAuthenticated(true);
       setLoading(false);
       return true;
@@ -111,6 +155,14 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       if (!response.ok) {
         throw new Error("Logout failed");
       }
+
+       // Clear mobile token if it exists
+      if (typeof window !== 'undefined') {
+        sessionStorage.removeItem('mobile_jwt');
+      }
+
+
+
       setIsAuthenticated(false);
       setUser(null);
       toast.success("Logged out successfully");
