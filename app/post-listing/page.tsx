@@ -13,6 +13,36 @@ import { toast } from "sonner"
 import { useAuth } from "../contexts/AuthContext" // Make sure this path is correct
 import { motion } from "framer-motion"
 
+const API_URL = process.env.NEXT_PUBLIC_API_URL || "https://campuscart-backend-ee42358f2a62.herokuapp.com";
+
+// Helper function to make authenticated requests with mobile fallback
+const makeAuthenticatedRequest = async (url: string, options: RequestInit = {}) => {
+  // First try with credentials (cookies)
+  let response = await fetch(url, {
+    ...options,
+    credentials: "include",
+    headers: {
+      // Don't set Content-Type for FormData - let browser set it with boundary
+      ...(options.body instanceof FormData ? {} : { "Content-Type": "application/json" }),
+      ...options.headers,
+    },
+  });
+
+  // If unauthorized and we have a sessionStorage token, try with Authorization header
+  if (response.status === 401 && typeof window !== 'undefined' && sessionStorage.getItem('mobile_jwt')) {
+    response = await fetch(url, {
+      ...options,
+      headers: {
+        // Don't set Content-Type for FormData - let browser set it with boundary
+        ...(options.body instanceof FormData ? {} : { "Content-Type": "application/json" }),
+        "Authorization": `Bearer ${sessionStorage.getItem('mobile_jwt')}`,
+        ...options.headers,
+      },
+    });
+  }
+   return response;
+};
+
 export default function PostListing() {
   const router = useRouter()
   const { isAuthenticated, loading, checkAuth } = useAuth() // Include checkAuth from context
@@ -86,13 +116,16 @@ export default function PostListing() {
         listingFormData.append("images", image)
       })
 
-      console.log(`Submitting to: ${process.env.NEXT_PUBLIC_API_URL}/listings`)
-      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/listings`, {
+         console.log(`Submitting to: ${API_URL}/listings`)
+      
+      // Use the same authentication helper as Dashboard
+      const response = await makeAuthenticatedRequest(`${API_URL}/listings`, {
         method: "POST",
         body: listingFormData,
-        credentials: "include", // Include cookies in the request
+        // credentials: "include" is handled by makeAuthenticatedRequest
       })
 
+      
       if (!response.ok) {
         throw new Error(`HTTP error! status: ${response.status}`)
       }
